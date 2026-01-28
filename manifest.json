@@ -1,0 +1,57 @@
+{
+  "name": "Gerenciador de Comandos OLT",
+  "short_name": "OLT Manager",
+  "description": "Ferramenta para gerenciamento e conversão de comandos de configuração para OLTs Fiberhome e Huawei.",
+  "version": "1.7.0",
+  "id": "olt-manager-web",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0a0a",
+  "theme_color": "#000000",
+  "categories": ["productivity", "utilities"],
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "Assets/Imagens/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "Assets/Imagens/favicon-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "Assets/Imagens/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "Assets/Imagens/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "Assets/Imagens/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Interface Mobile do Gerenciador"
+    },
+    {
+      "src": "Assets/Imagens/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Interface Desktop do Gerenciador"
+    }
+  ]
+}
