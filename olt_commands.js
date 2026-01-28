@@ -1,0 +1,228 @@
+window.OLT_DATA = {
+    "ZTE Z600 Itaum": {
+        "description": "OLT ZTE ITAUM ZXA10 C600",
+        "categories": {
+            "Gerenciamento de ONU": {
+                "Consultar ONU": {
+                    "Por Serial Number": "show gpon onu by sn {sn}",
+                    "Detalhes da ONU": "show gpon onu detail-info gpon_olt-{slot}/{porta}/{pon} {id}",
+                    "Estado das ONUs": "show gpon onu state gpon_olt-{slot}/{porta}/{pon}",
+                    "MAC da ONU": "show gpon onu mac gpon_olt-{slot}/{porta}/{pon} {id}",
+                    "Status PON": "show interface gpon_olt-{slot}/{porta}/{pon}",
+                    "Config da PON": "show running-config interface gpon_olt-{slot}/{porta}/{pon}"
+                },
+                "Remover ONU": {
+                    "Por ID": "configure terminal\ninterface gpon_olt-{slot}/{porta}/{pon}\nno onu {id}\nexit\nexit",
+                    "Por Serial": "configure terminal\ninterface gpon_olt-{slot}/{porta}/{pon}\nno onu sn {sn}\nexit\nexit"
+                },
+                "Reiniciar ONU": "configure terminal\ninterface gpon_olt-{slot}/{porta}/{pon}\nonu {id} reboot\nexit\nexit",
+                "Atualizar ONU": {
+                    "Verificar versão": "show remote-unit information gpon_olt-{slot}/{porta}/{pon} {id}",
+                    "Atualizar": "remote-unit update-and-reboot {firmware} gpon_olt-{slot}/{porta}/{pon} {id}",
+                    "Status atualização": "show remote-unit update-status gpon_olt-{slot}/{porta}/{pon} {id}"
+                }
+            },
+            "Diagnóstico": {
+                "Informações Ópticas": {
+                    "Info óptica PON": "show gpon optical-info gpon_olt-{slot}/{porta}/{pon}",
+                    "Níveis ópticos ONU": "show gpon onu optical-info gpon_olt-{slot}/{porta}/{pon} {id}",
+                    "Distância ONU": "show gpon onu distance gpon_olt-{slot}/{porta}/{pon} {id}"
+                },
+                "Estatísticas": {
+                    "Tráfego PON": "show pon onu statistics gpon_olt-{slot}/{porta}/{pon}",
+                    "Tráfego ONU específica": "show pon onu statistics gpon-onu_{slot}/{porta}/{pon}:{id}",
+                    "Histórico ONU": "show gpon onu history gpon_olt-{slot}/{porta}/{pon} {id}"
+                },
+                "Alarmes": "show alarm active"
+            },
+            "Sistema": {
+                "Informações Gerais": {
+                    "Versão sistema": "show version",
+                    "Lista interfaces": "show interface brief",
+                    "Arquivos firmware": "dir /datadisk0/LR0/onuver/"
+                },
+                "Navegação": {
+                    "Modo privilegiado": "enable",
+                    "Modo configuração": "configure terminal",
+                    "Interface GPON": "interface gpon_olt-{slot}/{porta}/{pon}",
+                    "Sair": "exit"
+                }
+            }
+        }
+    },
+    "ZTE C300 Ullyses": {
+        "description": "OLT ZTE ULLYSES",
+        "categories": {
+            "Gerenciamento de ONU": {
+                "Consultar ONU": {
+                    "Por Serial Number": "show gpon onu by sn {sn}",
+                    "Detalhes da ONU": "show gpon onu detail-info gpon-olt_{slot}/{porta}/{pon}",
+                    "MAC da ONU": "show gpon onu mac gpon-olt_{slot}/{porta}/{pon} {id}",
+                    "Status PON": "show interface gpon-olt_{slot}/{porta}/{pon}",
+                    "Config da PON": "show running-config interface gpon-olt_{slot}/{porta}/{pon}"
+                },
+                "Remover ONU": {
+                    "Por ID": "configure terminal\ninterface gpon-olt_{slot}/{porta}/{pon}\nno onu {id}\nexit\nexit",
+                    "Por Serial": "configure terminal\ninterface gpon-olt_{slot}/{porta}/{pon}\nno onu sn {sn}\nexit\nexit",
+                    "Conversor para remoção em lote": "CONVERTER_ONU_TOOL"
+                },
+                "Reiniciar ONU": "configure terminal\ninterface gpon-olt_{slot}/{porta}/{pon}\nonu {id} reboot\nexit\nexit",
+                "Atualizar ONU": {
+                    "Verificar versão": "show cpe information gpon-olt_{slot}/{porta}/{pon} {id}",
+                    "Atualizar firmware": "cpe update-and-reboot {firmware} gpon-olt_{slot}/{porta}/{pon} {id}",
+                    "Status atualização": "show cpe update-status gpon-olt_{slot}/{porta}/{pon} {id}"
+                }
+            },
+            "Diagnóstico": {
+                "Informações Ópticas": {
+                    "Níveis ópticos": "show gpon onu optical-info gpon-olt_{slot}/{porta}/{pon} {id}",
+                    "Distância ONU": "show gpon onu distance gpon-olt_{slot}/{porta}/{pon} {id}",
+                    "MACs aprendidos": "show gpon onu mac-learning gpon-olt_{slot}/{porta}/{pon} {id}"
+                },
+                "Alarmes": "show alarm active"
+            }
+        }
+    },
+    "Huawei MA5800 Araquari": {
+        "description": "OLT HUAWEI ARAQUARI",
+        "categories": {
+            "Gerenciamento de ONU": {
+                "Consultar ONU": {
+                    "Resumo PON": "display ont info summary",
+                    "Por Serial Number": "display ont info by-sn {sn}",
+                    "Informações detalhadas": "display ont info {slot} {porta} {pon} {id}",
+                    "Versão firmware": "display ont version {slot} {porta} {pon} {id}"
+                },
+                "Remover ONU": {
+                    "Verificar service-ports": "display service-port port {slot}/{porta}/{pon} ont {id}",
+                    "Remover service-port": [
+                        "config",
+                        "undo service-port {index}"
+                    ],
+                    "Excluir ONU": [
+                        "config",
+                        "interface gpon {slot}/{porta}",
+                        "ont delete {pon} {id}",
+                        "quit",
+                        "quit",
+                        "save"
+                    ]
+                },
+                "Reiniciar ONU": "ont reset {slot} {porta} {pon} {id}"
+            },
+            "Diagnóstico": {
+                "Informações Ópticas": {
+                    "Potência óptica ONU": "display ont info {slot} {porta} {pon} {id}"
+                }
+            },
+            "Sistema": {
+                "Informações Gerais": {
+                    "Versão sistema": "display version",
+                    "Lista interfaces": "display interface brief",
+                    "Configuração atual": "display current-configuration"
+                },
+                "Navegação": {
+                    "Modo privilegiado": "enable",
+                    "Modo configuração": "config",
+                    "Interface GPON": "interface gpon {slot} {porta}",
+                    "Sair nível atual": "quit",
+                    "Salvar configuração": "save"
+                }
+            }
+        }
+    },
+    "Fiberhome AN5516": {
+        "description": "OLT FIBERHOME AN5516 (Sistema VR3.2)",
+        "categories": {
+            "Gerenciamento de ONU": {
+                "Consultar ONU": {
+                    "ONUs Online": "cd gpononu\nshow online slot {slot} link {link}",
+                    "Estado da ONU específica": "cd gpononu\nshow onu_state slot {slot} link {link} onu {onu}",
+                    "ONUs não autorizadas": "cd gpononu\nshow unauth list",
+                    "Por Serial Number (Physical ID)": "cd gpononu\nshow onu-authinfo phy-id {sn}",
+                    "Por ID Lógico": "cd gpononu\nshow onu-authinfo log-id {logical_id}",
+                    "Por Password Física": "cd gpononu\nshow onu-authinfo password {password}",
+                    "Versão firmware": "cd gpononu\nshow onu_ver slot {slot} link {link}",
+                    "Potência óptica": "cd gpononu\nshow opticpower_scout slot {slot} link {link} onu {onu}",
+                    "Último log de conexão/desconexão": "cd gpononu\nshow onu_last_on_and_off_time slot {slot} link {link} onu {onu}"
+                },
+                "Remover ONU": {
+                    "Desautorizar ONU": "enable\ncd gpononu\nset whitelist phy_addr address {sn} password null action delete\ncd\nsave"
+                },
+                "Atualizar ONU": {
+                    "Verificar versão": "cd gpononu\nshow onu_ver slot {slot} link {link}",
+                    "Atualizar firmware": "cd gpononu\nonu_upgrade slot {slot} link {link} onu {onu} file {firmware}",
+                    "Status atualização": "cd gpononu\nshow onu_upgrade_status slot {slot} link {link} onu {onu}"
+                },
+                "Diagnóstico ONU": {
+                    "Status portas Ethernet": "cd gpononu\nshow feport_status slot {slot} link {link} onu {onu}",
+                    "MACs aprendidos": "cd gpononu\nshow mac_list slot {slot} link {link} onu {onu} port {port}",
+                    "Informações ópticas": "cd gpononu\nshow opticpower_scout slot {slot} link {link} onu {onu}",
+                    "Distância/RTT": "cd gpononu\nshow rtt_value slot {slot} link {link} onu {onu}"
+                }
+            },
+            "Sistema": {
+                "Navegação": {
+                    "Modo Admin": "enable",
+                    "Voltar ao menu anterior": " cd ..",
+                    "Limpar tela": "clear",
+                    "Listar comandos": "list",
+                    "Ajuda": "help",
+                    "Sair": "quit",
+                    "Salvar configurações": "save"
+                }
+            }
+        }
+    }
+};
+
+window.VALIDATION_PATTERNS = {
+    "slot": "^\\d{1,2}$",
+    "porta": "^\\d{1,2}$",
+    "pon": "^\\d{1,2}$",
+    "id": "^\\d{1,3}$",
+    "onu": "^\\d{1,3}$",
+    "link": "^\\d{1,2}$",
+    "sn": "^[A-Za-z0-9]{8,16}$",
+    "mac": "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$",
+    "logical_id": "^\\d+$"
+};
+
+window.DOCUMENTATION = {
+    "slot": "Número do slot da OLT (1-16)",
+    "porta": "Número da porta GPON (1-16)",
+    "pon": "Número da PON (1-8)",
+    "id": "ID da ONU (1-128)",
+    "onu": "ID da ONU (1-128)",
+    "link": "Número do Link/Porta (Fiberhome)",
+    "sn": "Número de série da ONU (8-16 caracteres)",
+    "mac": "Endereço MAC formato XX:XX:XX:XX:XX:XX",
+    "firmware": "Nome do arquivo de firmware",
+    "index": "Index do Service Port",
+    "logical_id": "ID Lógico da ONU",
+    "password": "Senha física (Password Auth)",
+    "port": "Porta Ethernet da ONU"
+};
+
+window.OLT_TIPS = {
+    "Huawei MA5800 Araquari": [
+        "Execute 'enable' para modo privilegiado",
+        "Use 'config' para modo de configuração",
+        "Use 'save' para salvar alterações"
+    ],
+    "ZTE Z600 Itaum": [
+        "Execute 'enable' antes de configurar",
+        "'configure terminal' entra no modo config",
+        "Cuidado com comandos de interface"
+    ],
+    "ZTE C300 Ullyses": [
+        "'enable' para modo privilegiado",
+        "'config' para configurações globais",
+        "Lembre-se de salvar com 'save'"
+    ],
+    "Fiberhome AN5516": [
+        "'enable' para modo admin",
+        "Use 'cd' para navegar entre módulos (ex: cd gpononu)",
+        "Comandos de Fiberhome são sensíveis ao contexto (módulo atual)"
+    ]
+};

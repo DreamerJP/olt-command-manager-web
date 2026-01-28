@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>OLT Manager</title>
+    <script src="olt_commands.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg-body: #0a0a0a;
+        --bg-sidebar: #111111;
+        --bg-card: #1c1c1c;
+        --bg-input: #252525;
+        --border-subtle: #333333;
+        --border-active: #555555;
+        --text-primary: #ededed;
+        --text-secondary: #a1a1a1;
+        --accent-blue: #3291ff;
+        --terminal-bg: #000000;
+        --terminal-text: #50fa7b;
+        --radius: 6px;
+        --font-main: "Inter", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: var(--bg-body);
+        color: var(--text-primary);
+        font-family: var(--font-main);
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+        font-size: 14px;
+      }
+
+      /* --- SIDEBAR --- */
+      .sidebar {
+        width: 320px;
+        background-color: var(--bg-sidebar);
+        border-right: 1px solid var(--border-subtle);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        user-select: none;
+      }
+
+      .sidebar-header {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        border-bottom: 1px solid var(--border-subtle);
+        font-weight: 700;
+        font-size: 16px;
+        color: #fff;
+        gap: 10px; /* Espaço entre ícone e texto */
+      }
+      
+      .sidebar-brand-icon {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+      }
+
+      .olt-select-container {
+        padding: 20px 24px 0 24px;
+      }
+
+      select.modern-select {
+        width: 100%;
+        background: var(--bg-input);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+        padding: 10px 12px;
+        border-radius: var(--radius);
+        outline: none;
+        cursor: pointer;
+        font-family: var(--font-main);
+        font-size: 13px;
+      }
+
+      .nav-tree {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 24px;
+      }
+
+      /* ESTILO: Categoria Principal (Seção) */
+      .section-header {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #666;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        margin: 24px 0 12px 0;
+      }
+      .section-header:first-of-type {
+        margin-top: 0;
+      }
+
+      /* ESTILO: Subcategoria (Pasta) */
+      .folder-group {
+        margin-bottom: 4px;
+      }
+
+      .folder-header {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+      .folder-header:hover {
+        color: #fff;
+      }
+
+      .folder-icon {
+        font-size: 10px;
+        margin-right: 10px;
+        color: var(--text-secondary);
+        transition: transform 0.2s;
+        width: 12px;
+        display: inline-block;
+        text-align: center;
+      }
+
+      .folder-header.open .folder-icon {
+        transform: rotate(90deg);
+        color: var(--accent-blue);
+      }
+
+      /* ESTILO: Container de Itens (Comandos) */
+      .folder-content {
+        display: none;
+        margin-left: 5px;
+        padding-left: 16px;
+        border-left: 1px solid var(--border-subtle);
+        margin-bottom: 8px;
+      }
+      .folder-content.show {
+        display: block;
+      }
+
+      /* ESTILO: Item Final (Link) */
+      .nav-item {
+        display: flex;
+        align-items: center;
+        padding: 6px 0;
+        color: var(--text-primary);
+        border-radius: var(--radius);
+        cursor: pointer;
+        text-decoration: none;
+        margin-bottom: 2px;
+        font-size: 13px;
+        transition: all 0.15s ease;
+      }
+
+      .nav-item:hover {
+        background-color: var(--bg-input);
+        color: var(--text-primary);
+      }
+
+      .nav-item.active {
+        background-color: var(--accent-blue);
+        color: #fff;
+        font-weight: 500;
+      }
+
+      /* --- MAIN CONTENT --- */
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background-color: var(--bg-body);
+      }
+
+      .main-header {
+        height: 60px;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        padding: 0 40px;
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+      }
+
+      .breadcrumb {
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+      .breadcrumb span {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-left: 6px;
+      }
+
+      .content-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 40px;
+        max-width: 1000px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      /* --- CARDS --- */
+      .card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 24px;
+      }
+
+      .card-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: flex;
+        align-items: center;
+      }
+
+      /* --- TERMINAL OUTPUT --- */
+      .terminal-window {
+        background-color: var(--terminal-bg);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+
+      .terminal-header {
+        background: #151515;
+        padding: 10px 16px;
+        border-bottom: 1px solid #333;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .terminal-dots {
+        display: flex;
+        gap: 8px;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .red {
+        background: #ff5f56;
+      }
+      .yellow {
+        background: #ffbd2e;
+      }
+      .green {
+        background: #27c93f;
+      }
+
+      .copy-btn {
+        background: transparent;
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      .copy-btn:hover {
+        border-color: var(--text-primary);
+        color: var(--text-primary);
+      }
+
+      .terminal-body {
+        padding: 24px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--terminal-text);
+        white-space: pre-wrap;
+      }
+
+      /* --- FORMULÁRIOS --- */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 0;
+      }
+
+      .label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+
+      .input {
+        width: 100%;
+        background: var(--bg-input);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+        padding: 12px 14px;
+        border-radius: var(--radius);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        outline: none;
+        transition: all 0.2s;
+      }
+
+      .input:focus {
+        border-color: var(--accent-blue);
+        background: #2a2a2a;
+      }
+      .input.valid {
+        border-color: #27c93f;
+      }
+      .input.invalid {
+        border-color: #ff5f56;
+      }
+
+      /* --- TIPS & EMPTY STATE --- */
+      .tip-item {
+        display: flex;
+        gap: 12px;
+        padding: 12px;
+        background: rgba(50, 145, 255, 0.08);
+        border-radius: var(--radius);
+        font-size: 13px;
+        color: #d1d5db;
+        border-left: 3px solid var(--accent-blue);
+        margin-bottom: 8px;
+      }
+
+      .empty-state {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+      }
+      .empty-icon {
+        font-size: 32px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+        filter: grayscale(100%);
+      }
+      /* --- CUSTOM SCROLLBAR --- */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-subtle);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--border-active);
+      }
+      /* Firefox */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-subtle) transparent;
+      }
+      /* --- MOBILE RESPONSIVE --- */
+      .menu-btn { display: none; }
+      .overlay { display: none; }
+
+      @media (max-width: 768px) {
+        body { flex-direction: column; overflow: auto; }
+        
+        .sidebar {
+          position: fixed;
+          top: 0; left: 0; bottom: 0;
+          z-index: 1000;
+          transform: translateX(-100%);
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          width: 280px;
+          box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+        }
+        .sidebar.open { transform: translateX(0); }
+
+        .overlay {
+          display: none;
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.7);
+          z-index: 999;
+          backdrop-filter: blur(2px);
+        }
+        .overlay.active { display: block; }
+
+        .main-content { margin-left: 0; width: 100%; height: auto; overflow: visible; }
+        .main-header { padding: 0 15px; }
+        
+        /* Botão Menu */
+        .menu-btn {
+          display: flex;
+          align-items: center; justify-content: center;
+          background: transparent; border: none;
+          color: var(--text-primary);
+          padding: 8px; margin-right: 10px;
+          cursor: pointer;
+        }
+
+        /* Ajustes de Grid para Celular */
+        .grid-2 { grid-template-columns: 1fr; }
+        
+        /* Batch Tool Mobile */
+        #batchToolArea .grid-2 { grid-template-columns: 1fr !important; gap: 20px !important; }
+        #batchToolArea .card { height: auto !important; }
+        #batchInput { min-height: 200px; }
+        .terminal-window { min-height: 200px; }
+
+        /* Esconder créditos flutuantes se atrapalhar teclado */
+        div[style*="fixed; bottom: 10px"] { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- OVERLAY MOBILE -->
+    <div class="overlay" onclick="toggleMenu()"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="favicon.ico" alt="Logo" class="sidebar-brand-icon">
+        OLT Manager
+      </div>
+      <div class="olt-select-container">
+        <select id="oltSelect" class="modern-select"></select>
+      </div>
+      <nav id="navTree" class="nav-tree"></nav>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="main-content">
+      <header class="main-header">
+        <!-- BOTÃO HAMBURGUER -->
+        <button class="menu-btn" onclick="toggleMenu()">
+          <svg width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="breadcrumb" id="breadcrumb" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Selecione um comando...</div>
+      </header>
+      
+      <!-- CRÉDITOS FLUTUANTES (Canto Inferior Direito) -->
+      <div style="position: fixed; bottom: 10px; right: 20px; font-size: 10px; color: var(--text-secondary); opacity: 0.5; z-index: 100;">
+        Dev: <strong style="color: var(--text-primary);">Dreamer</strong> • <a href="mailto:DreamerJPMG@gmail.com" style="color: inherit; text-decoration: none; border-bottom: 1px dotted var(--text-secondary);">DreamerJPMG@gmail.com</a>
+      </div>
+
+      <div id="emptyArea" class="empty-state">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 17 10 11 4 5"></polyline>
+            <line x1="12" y1="19" x2="20" y2="19"></line>
+          </svg>
+        </div>
+        <p>Selecione um comando para começar</p>
+      </div>
+
+      <div id="contentArea" class="content-scroll" style="display: none">
+        <!-- CARD TERMINAL -->
+        <div class="terminal-window">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <div class="dot red"></div>
+              <div class="dot yellow"></div>
+              <div class="dot green"></div>
+            </div>
+            <button class="copy-btn" onclick="copyCommand()">Copiar</button>
+          </div>
+          <div class="terminal-body" id="commandOutput"></div>
+        </div>
+
+        <!-- CARD PARÂMETROS -->
+        <div class="card">
+          <div class="card-title">Parâmetros</div>
+          <div id="paramsContainer" class="grid-2"></div>
+        </div>
+
+        <!-- CARD DICAS -->
+        <div class="card" id="tipsCard" style="display: none">
+          <div class="card-title">Dicas e Avisos</div>
+          <div id="tipsContainer"></div>
+        </div>
+      </div>
+
+      <!-- ÁREA DA FERRAMENTA DE LOTE -->
+      <div id="batchToolArea" class="content-scroll" style="display: none; max-width: 95%;">
+        <div class="card" style="height: 600px; display: flex; flex-direction: column;">
+          <div class="card-title">Conversor de Remoção em Lote</div>
+          
+          <div class="grid-2" style="flex: 1; gap: 30px; align-items: stretch; grid-template-columns: 1fr 1fr;">
+            <!-- Entrada -->
+            <div style="display: flex; flex-direction: column; gap: 10px; height: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                 <label class="label" style="margin:0;">COLE LOGS OU LISTAS (EXTRAÇÃO AUTOMÁTICA)</label>
+                 <button class="copy-btn" onclick="clearBatch()" style="font-size: 10px; padding: 2px 8px;">LIMPAR</button>
+              </div>
+              <textarea id="batchInput" 
+                style="flex: 1; background: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius); padding: 15px; font-family: var(--font-mono); resize: none; width: 100%;" 
+                placeholder="Pode colar logs completos, tabelas ou texto misturado.&#10;O sistema ignorará o lixo e buscará apenas por: gpon-onu_S/C/P:ID"
+                oninput="convertBatch()"></textarea>
+            </div>
+
+            <!-- Saída -->
+            <div style="display: flex; flex-direction: column; gap: 10px; height: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center; height: 21px;"> <!-- Altura fixa para alinhar com header da esquerda -->
+                <label class="label" style="margin:0;">SCRIPT GERADO</label>
+                <label class="label" id="batchCount" style="color: var(--text-primary); margin:0;"></label>
+              </div>
+              
+              <div class="terminal-window" style="flex: 1; margin-bottom: 0; display: flex; flex-direction: column;">
+                 <div class="terminal-header" style="border-radius: 8px 8px 0 0;">
+                    <div class="terminal-dots">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                    </div>
+                    <button class="copy-btn" onclick="copyBatchOutput()">Copiar</button>
+                 </div>
+                 <div class="terminal-body" id="batchOutput" style="flex: 1; overflow-y: auto; font-size: 13px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </main>
+
+    <script>
+      // --- ESTADO & DADOS ---
+      let CURRENT_TEMPLATE = "";
+      let CURRENT_PARAMS = {};
+
+      window.onload = () => {
+        if (!window.OLT_DATA)
+          return alert("Erro:olt_commands.js não carregado!");
+
+        const select = document.getElementById("oltSelect");
+        Object.keys(window.OLT_DATA).forEach((m) => {
+          const opt = document.createElement("option");
+          opt.value = m;
+          opt.innerText = m;
+          select.appendChild(opt);
+        });
+
+        select.onchange = (e) => loadOLT(e.target.value);
+        loadOLT(Object.keys(window.OLT_DATA)[0]);
+      };
+
+      // --- NAVEGAÇÃO ---
+      function loadOLT(oltName) {
+        const data = window.OLT_DATA[oltName];
+        const nav = document.getElementById("navTree");
+        nav.innerHTML = "";
+
+        // Categorias Principais (Nível 0)
+        Object.entries(data.categories).forEach(([catName, items]) => {
+          const title = document.createElement("div");
+          title.className = "section-header";
+          title.innerText = catName;
+          nav.appendChild(title);
+
+          // Renderizar Subitens
+          renderGroup(items, nav, catName);
+        });
+
+        updateTips(oltName);
+      }
+
+      // Renderização recursiva de pastas e comandos
+      function renderGroup(items, container, pathPrefix) {
+        Object.entries(items).forEach(([key, val]) => {
+          if (typeof val === "string" || Array.isArray(val)) {
+            // É UM COMANDO (Folha)
+            const link = document.createElement("a");
+            link.className = "nav-item";
+            // Adiciona ícone de "bullet" para alinhar com as pastas
+            link.innerHTML = `<span class="folder-icon" style="opacity:0.3; font-size: 14px; line-height: 1;">•</span> ${key}`;
+            link.onclick = () => selectCommand(key, val, pathPrefix, link);
+            container.appendChild(link);
+          } else {
+            // É UMA SUBCATEGORIA (Pasta)
+            const wrapper = document.createElement("div");
+            wrapper.className = "folder-group";
+
+            const header = document.createElement("div");
+            header.className = "folder-header";
+            // SVG CHEVRON RIGHT
+            header.innerHTML = `<span class="folder-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span> ${key}`;
+
+            const content = document.createElement("div");
+            content.className = "folder-content";
+
+            // Lógica de Expandir/Recolher
+            header.onclick = () => {
+              content.classList.toggle("show");
+              header.classList.toggle("open");
+            };
+
+            wrapper.appendChild(header);
+            wrapper.appendChild(content);
+            container.appendChild(wrapper);
+
+            // Recursão dentro do container de conteúdo
+            renderGroup(val, content, pathPrefix + " / " + key);
+          }
+        });
+      }
+
+      // Seleção de Comando
+      function selectCommand(name, template, path, element) {
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((el) => el.classList.remove("active"));
+        element.classList.add("active");
+        
+        // FECHAR MENU MOBILE SE ESTIVER ABERTO
+        if(window.innerWidth <= 768) {
+            toggleMenu();
+        }
+
+        // RESETAR VIEWS
+        document.getElementById("emptyArea").style.display = "none";
+        document.getElementById("contentArea").style.display = "none";
+        document.getElementById("batchToolArea").style.display = "none";
+
+        document.getElementById("breadcrumb").innerHTML =
+          `${path} / <span>${name}</span>`;
+
+        // É FERRAMENTA ESPECIAL?
+        if (template === "CONVERTER_ONU_TOOL") {
+          document.getElementById("batchToolArea").style.display = "block";
+          return;
+        }
+
+        // COMANDO NORMAL
+        document.getElementById("contentArea").style.display = "block";
+
+        CURRENT_TEMPLATE = Array.isArray(template)
+          ? template.join("\n")
+          : template;
+        CURRENT_PARAMS = {};
+
+        renderParams(CURRENT_TEMPLATE);
+        renderPreview();
+      }
+
+      // --- MOBILE MENU ---
+      function toggleMenu() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.overlay');
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+      }
+
+      // PRESETS ESPECIAIS (Firmwares conhecidos)
+      const FIRMWARE_OPTIONS = {
+        "ZTE F601": "F601P1N34.bin",
+        "ONU FAST": "F10-G10-NW_1.6.0.bin",
+        Padrão: "F601P1N34.bin", // Fallback
+      };
+
+      // --- RENDERIZAÇÃO DE FORMULÁRIOS ---
+      function renderParams(template) {
+        const container = document.getElementById("paramsContainer");
+        container.innerHTML = "";
+
+        const regex = /{([\w]+)}/g;
+        const params = new Set();
+        let match;
+        while ((match = regex.exec(template)) !== null) params.add(match[1]);
+
+        if (params.size === 0) {
+          container.innerHTML =
+            '<div style="color:#666; font-style:italic;">Sem parâmetros.</div>';
+          return;
+        }
+
+        params.forEach((param) => {
+          const group = document.createElement("div");
+          group.className = "form-group";
+
+          const label = document.createElement("label");
+          label.className = "label";
+          // Adiciona descrição da documentação se houver
+          const doc = window.DOCUMENTATION && window.DOCUMENTATION[param];
+          label.innerText = doc
+            ? `${param.toUpperCase()} - ${doc}`
+            : param.toUpperCase();
+
+          // LÓGICA ESPECIAL PARA FIRMWARE
+          if (param === "firmware") {
+            const select = document.createElement("select");
+            select.className = "input modern-select"; // Reutiliza estilo de select moderno
+
+            // Popular opções
+            Object.entries(FIRMWARE_OPTIONS).forEach(([name, file]) => {
+              const opt = document.createElement("option");
+              opt.value = file;
+              opt.innerText = name;
+              select.appendChild(opt);
+            });
+
+            // Valor padrão
+            const defaultFile = Object.values(FIRMWARE_OPTIONS)[0];
+            CURRENT_PARAMS[param] = defaultFile;
+            // Força atualização inicial
+            setTimeout(renderPreview, 0);
+
+            select.onchange = (e) => {
+              CURRENT_PARAMS[param] = e.target.value;
+              renderPreview();
+            };
+
+            group.appendChild(label);
+            group.appendChild(select);
+          } else {
+            // INPUT PADRÃO PARA OUTROS PARÂMETROS
+            const input = document.createElement("input");
+            input.className = "input";
+            input.placeholder = param.toUpperCase(); // Placeholder limpo
+            input.autocomplete = "off";
+            input.id = `input-${param}`; // ID único para referência
+
+            // AUTO-FILL INTELIGENTE (Ao colar no SLOT)
+            if (param === "slot") {
+              input.onpaste = (e) => {
+                // Pequeno delay para pegar o valor colado
+                setTimeout(() => {
+                  const val = e.target.value;
+                  // Regex para pegar sequências numéricas separadas por qualquer coisa não numérica
+                  // Ex: 1/2/3, 1-2-3, 1 2 3
+                  const parts = val.split(/[/\-: ]+/).filter(p => p.trim() !== "");
+                  
+                  if (parts.length > 1) {
+                    // Mapeamento sequencial: Slot -> Porta -> Pon -> ID/ONU/Link
+                    const fields = ["slot", "porta", "pon", "id"]; // Ordem padrão
+                    
+                    // Fallbacks para nomes variáveis
+                    const map = {
+                        "slot": parts[0],
+                        "porta": parts[1],
+                        "pon": parts[2],
+                        "link": parts[1], // Fiberhome usa link as vezes
+                        "onu": parts[3],  // Fiberhome usa onu as vezes
+                        "id": parts[3]
+                    };
+
+                    // Tenta preencher os campos existentes na tela
+                    Object.keys(map).forEach(key => {
+                        const targetInput = document.getElementById(`input-${key}`);
+                        if(targetInput && map[key]) {
+                            targetInput.value = map[key];
+                            CURRENT_PARAMS[key] = map[key];
+                            validate(targetInput, key, map[key]);
+                        }
+                    });
+                    
+                    renderPreview();
+                  }
+                }, 10);
+              };
+            }
+
+            input.oninput = (e) => {
+              CURRENT_PARAMS[param] = e.target.value;
+              validate(input, param, e.target.value);
+              renderPreview();
+            };
+
+            group.appendChild(label);
+            group.appendChild(input);
+          }
+
+          container.appendChild(group);
+        });
+      }
+
+      // Validação
+      function validate(input, param, value) {
+        const pattern =
+          window.VALIDATION_PATTERNS && window.VALIDATION_PATTERNS[param];
+        if (pattern && value) {
+          if (new RegExp(pattern).test(value)) {
+            input.classList.add("valid");
+            input.classList.remove("invalid");
+          } else {
+            input.classList.add("invalid");
+            input.classList.remove("valid");
+          }
+        } else {
+          input.classList.remove("valid", "invalid");
+        }
+      }
+
+      // Atualizar Terminal
+      function renderPreview() {
+        let cmd = CURRENT_TEMPLATE;
+        Object.entries(CURRENT_PARAMS).forEach(([k, v]) => {
+          if (v) cmd = cmd.replace(new RegExp(`{${k}}`, "g"), v);
+        });
+        document.getElementById("commandOutput").innerText = cmd;
+      }
+
+      // Dicas da OLT
+      function updateTips(oltName) {
+        const card = document.getElementById("tipsCard");
+        const container = document.getElementById("tipsContainer");
+        const tips = window.OLT_TIPS && window.OLT_TIPS[oltName];
+
+        container.innerHTML = "";
+        if (tips && tips.length) {
+          card.style.display = "block";
+          tips.forEach((t) => {
+            const el = document.createElement("div");
+            el.className = "tip-item";
+            // Ícone SVG de Info
+            el.innerHTML = `<svg style="flex-shrink:0; margin-top:2px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> <span>${t}</span>`;
+            container.appendChild(el);
+          });
+        } else {
+          card.style.display = "none";
+        }
+      }
+
+      // Copiar
+      function copyCommand() {
+        const txt = document.getElementById("commandOutput").innerText;
+        navigator.clipboard.writeText(txt);
+        showCopied(document.querySelector(".terminal-header .copy-btn"));
+      }
+
+      function showCopied(btn) {
+        const old = btn.innerText;
+        btn.innerText = "COPIADO!";
+        btn.style.borderColor = "#27c93f";
+        btn.style.color = "#27c93f";
+        setTimeout(() => {
+          btn.innerText = old;
+          btn.style.borderColor = "";
+          btn.style.color = "";
+        }, 2000);
+      }
+
+      // --- FERRAMENTA DE LOTE ---
+      function convertBatch() {
+        const input = document.getElementById("batchInput").value;
+        let output = ["configure terminal"];
+        let count = 0;
+
+        // Regex Global para capturar todas as ocorrências no texto
+        // Formato: gpon-onu_Slot/Porta/Pon:ID
+        const regex = /gpon-onu_(\d+)\/(\d+)\/(\d+):(\d+)/g;
+
+        // Encontrar todas as correspondências no texto inteiro
+        const matches = [...input.matchAll(regex)];
+
+        matches.forEach((match) => {
+          count++;
+          const [_, slot, card, port, onuId] = match;
+          output.push(`interface gpon-olt_${slot}/${card}/${port}`);
+          output.push(`no onu ${onuId}`);
+          output.push(`exit`);
+        });
+
+        if (count > 0) {
+          document.getElementById("batchOutput").innerText = output.join("\n");
+          document.getElementById("batchCount").innerText =
+            `${count} ONUs identificadas`;
+        } else {
+          document.getElementById("batchOutput").innerText =
+            input.trim() === ""
+              ? ""
+              : "# Nenhuma ONU válida encontrada.\n# Cole um texto contendo padrões como: gpon-onu_1/2/3:4";
+          document.getElementById("batchCount").innerText = "";
+        }
+      }
+
+      function copyBatchOutput() {
+        const txt = document.getElementById("batchOutput").innerText;
+        navigator.clipboard.writeText(txt);
+        showCopied(document.querySelector("#batchToolArea .copy-btn"));
+      }
+
+      function clearBatch() {
+        document.getElementById("batchInput").value = "";
+        convertBatch();
+      }
+    </script>
+  </body>
+</html>
