@@ -1,6 +1,6 @@
 # 🌐 OLT Manager (Web Version)
 
-![Status](https://img.shields.io/badge/Status-Stable-success) ![Version](https://img.shields.io/badge/Version-1.6-blue) ![License](https://img.shields.io/badge/License-MIT-green)
+![Status](https://img.shields.io/badge/Status-Stable-success) ![Version](https://img.shields.io/badge/Version-1.7-blue)
 
 O **OLT Manager** é uma aplicação web poderosa e leve projetada para simplificar a administração de OLTs (**Huawei**, **ZTE** e **Fiberhome**). Ele gera automaticamente scripts de comando complexos através de uma interface moderna, intuitiva e totalmente responsiva.
 
@@ -39,14 +39,6 @@ Compatibilidade nativa com os principais modelos do mercado:
 
 - Interface escura (**Dark Mode**) inspirada em dashboards modernos.
 - Totalmente compatível com celulares e tablets (Menu Mobile, Grids Adaptáveis).
-
----
-
-## 📸 Capturas de Tela
-
-|                Desktop Dashboard                 |        Ferramenta de Lote        |          Mobile View          |
-| :----------------------------------------------: | :------------------------------: | :---------------------------: |
-| _Interface principal com terminal e parâmetros._ | _Conversor inteligente de logs._ | _Menu responsivo e adaptado._ |
 
 ---
 
