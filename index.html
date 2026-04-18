@@ -598,6 +598,54 @@
           </div>
         </div>
       </div>
+      
+      <!-- WIZARD AREA (ADICIONAR ONU) -->
+      <div id="wizardArea" class="content-scroll" style="display: none; max-width: 1000px; margin: 0 auto;">
+        
+        <div class="card" style="margin-bottom: 20px; border: 1px solid var(--accent-blue); background: linear-gradient(145deg, #1c1c1c, #161a20);">
+           <div class="card-title" style="color: var(--accent-blue); margin-bottom: 10px;">Passo 1: Identificação Física na OLT</div>
+           <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">Utilize o Serial Number para localizar a porta automaticamente. Jogue o comando na OLT e cole a resposta abaixo.</p>
+           
+           <div class="grid-2" style="gap: 20px;">
+              <div>
+                 <label class="label">Serial Number (SN)</label>
+                 <input type="text" id="wizSearchSN" class="input" placeholder="Ex: ZTEG123456" oninput="wizUpdateSearchCmd()">
+                 <button class="copy-btn" id="wizBtnSearch" style="margin-top: 10px; width: 100%; padding: 12px; background: rgba(50,145,255,0.1); border-color: var(--accent-blue); color: var(--accent-blue);" onclick="copyWizSearchCmd()">1. Copiar Comando de Busca</button>
+                 <div id="wizSearchCmdHidden" style="display: none;"></div>
+              </div>
+              <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px dashed var(--accent-blue);">
+                 <label class="label" style="color: var(--accent-blue);">2. Cole o retorno da tela da OLT aqui:</label>
+                 <textarea id="wizPasteArea" class="input" style="height: 80px; resize: none; font-family: var(--font-mono); font-size: 12px; background: #0a0a0a;" placeholder="Cole o resultado do autofind ou show gpon onu by sn..." oninput="wizExtractData()"></textarea>
+                 <div id="wizExtractionResult" style="margin-top: 10px; font-size: 12px; color: #27c93f; font-weight: 500;"></div>
+              </div>
+           </div>
+        </div>
+
+        <div class="card" id="wizStep2" style="opacity: 0.3; pointer-events: none; transition: all 0.3s;">
+           <div class="card-title">Passo 2: Configuração do Perfil (Lógico)</div>
+           
+           <label class="label">Escolha o serviço / modo da casa do cliente:</label>
+           <div id="wizModesContainer" style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px;">
+              <!-- Radios injetados pelo JS dinamicamente baseados nas "OPÇÕES" -->
+           </div>
+           
+           <div id="wizTipsContainer" style="margin-bottom: 20px;"></div>
+           
+           <div id="wizFieldsContainer" class="grid-2">
+              <!-- Inputs das variaveis gerados dinamicamente com Drops OLT_OPTIONS -->
+           </div>
+           
+           <button class="copy-btn" id="wizGenerateBtn" style="margin-top: 25px; width: 100%; padding: 14px; font-size: 14px; background: var(--accent-blue); color: #fff; border: none; border-radius: 6px; font-weight: 600;" onclick="wizShowFinal()">3. Gerar Script de Provisionamento Completo</button>
+        </div>
+
+        <div class="terminal-window" id="wizTerminalWindow" style="display: none; margin-top: 20px;">
+           <div class="terminal-header">
+             <div class="terminal-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+             <button class="copy-btn" onclick="copyWizFinal()">Copiar Tudo e Salvar</button>
+           </div>
+           <div class="terminal-body" id="wizCommandOutput"></div>
+        </div>
+      </div>
       </div>
     </main>
 
@@ -605,6 +653,7 @@
       // --- ESTADO & DADOS ---
       let CURRENT_TEMPLATE = "";
       let CURRENT_PARAMS = {};
+      let CURRENT_OLT_NAME = "";
 
       window.onload = () => {
         if (!window.OLT_DATA)
@@ -624,6 +673,7 @@
 
       // --- NAVEGAÇÃO ---
       function loadOLT(oltName) {
+        window.CURRENT_OLT_NAME = oltName;
         const data = window.OLT_DATA[oltName];
         const nav = document.getElementById("navTree");
         nav.innerHTML = "";
@@ -668,8 +718,17 @@
 
             // Lógica de Expandir/Recolher
             header.onclick = () => {
-              content.classList.toggle("show");
-              header.classList.toggle("open");
+              if (key.trim().toUpperCase() === "ADICIONAR ONU") {
+                // Abre o Assistente Interativo (Wizard) para Adicionar ONU
+                openWiz(key, val, pathPrefix);
+                document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+                header.classList.add("active");
+                
+                if (window.innerWidth <= 768) toggleMenu();
+              } else {
+                content.classList.toggle("show");
+                header.classList.toggle("open");
+              }
             };
 
             wrapper.appendChild(header);
@@ -682,10 +741,10 @@
         });
       }
 
-      // Seleção de Comando
+      // Seleção de Comando Padrão
       function selectCommand(name, template, path, element) {
         document
-          .querySelectorAll(".nav-item")
+          .querySelectorAll(".nav-item, .folder-header")
           .forEach((el) => el.classList.remove("active"));
         element.classList.add("active");
         
@@ -696,11 +755,11 @@
 
         // RESETAR VIEWS
         document.getElementById("emptyArea").style.display = "none";
+        document.getElementById("wizardArea").style.display = "none";
         document.getElementById("contentArea").style.display = "none";
         document.getElementById("batchToolArea").style.display = "none";
 
-        document.getElementById("breadcrumb").innerHTML =
-          `${path} / <span>${name}</span>`;
+        document.getElementById("breadcrumb").innerHTML = `${path} / <span>${name}</span>`;
 
         // É FERRAMENTA ESPECIAL?
         if (template === "CONVERTER_ONU_TOOL") {
@@ -711,14 +770,241 @@
         // COMANDO NORMAL
         document.getElementById("contentArea").style.display = "block";
 
-        CURRENT_TEMPLATE = Array.isArray(template)
-          ? template.join("\n")
-          : template;
+        CURRENT_TEMPLATE = Array.isArray(template) ? template.join("\n") : template;
         CURRENT_PARAMS = {};
 
-        renderParams(CURRENT_TEMPLATE);
+        renderParams(CURRENT_TEMPLATE, "paramsContainer");
         renderPreview();
       }
+
+      // --- ENGINE DO WIZARD ADICIONAR ONU ---
+      let CURRENT_WIZ_DATA = {};
+      let CURRENT_WIZ_MODETemplate = "";
+
+      function openWiz(key, val, path) {
+        document.getElementById("emptyArea").style.display = "none";
+        document.getElementById("contentArea").style.display = "none";
+        document.getElementById("batchToolArea").style.display = "none";
+        document.getElementById("wizardArea").style.display = "block";
+        document.getElementById("breadcrumb").innerHTML = `${path} / <span style="color:var(--accent-blue)">⚡ ${key} (Assistente Inteligente)</span>`;
+
+        CURRENT_WIZ_DATA = val;
+        CURRENT_PARAMS = {};
+
+        // RESET
+        document.getElementById("wizSearchSN").value = "";
+        document.getElementById("wizPasteArea").value = "";
+        document.getElementById("wizExtractionResult").innerText = "";
+        document.getElementById("wizStep2").style.opacity = "0.3";
+        document.getElementById("wizStep2").style.pointerEvents = "none";
+        document.getElementById("wizTerminalWindow").style.display = "none";
+        document.getElementById("wizSearchCmdHidden").innerText = "";
+
+        // Encontrar o comando de Busca (Passo Inicial com {sn})
+        const keys = Object.keys(val);
+        const searchKey = keys.find(k => k.toLowerCase().includes("por sn") || (val[k].includes && val[k].includes("{sn}") && k.includes("Inicial")));
+        if(searchKey) {
+            let searchTpl = val[searchKey];
+            document.getElementById("wizSearchCmdHidden").innerText = searchTpl;
+            document.getElementById("wizBtnSearch").innerText = "1. Copiar Comando de Busca: " + searchTpl.replace("{sn}", "SN_AQUI");
+        }
+
+        // Construir botões de OPÇÕES
+        const modesContainer = document.getElementById("wizModesContainer");
+        modesContainer.innerHTML = "";
+        let first = true;
+        Object.entries(val).forEach(([cmdName, cmdTemplate]) => {
+           if(cmdName.toUpperCase().includes("OPÇÃO") || cmdName.toUpperCase().includes("OPCAO")) {
+              const label = document.createElement("label");
+              label.style.display = "flex";
+              label.style.alignItems = "center";
+              label.style.padding = "12px 18px";
+              label.style.border = "1px solid var(--border-subtle)";
+              label.style.borderRadius = "8px";
+              label.style.cursor = "pointer";
+              label.style.background = "var(--bg-input)";
+              label.style.fontSize = "13px";
+              label.style.fontWeight = "500";
+              
+              const radio = document.createElement("input");
+              radio.type = "radio";
+              radio.name = "wizMode";
+              radio.value = cmdName;
+              radio.style.marginRight = "10px";
+              
+              if(first) { radio.checked = true; first = false; }
+              
+              radio.onchange = () => wizCompileForm();
+
+              label.appendChild(radio);
+              
+              // Limpar a palavra "OPÇÃO A:" para ficar visulmente bonito
+              let cleanName = cmdName.replace(/OPÇÃO [A-Z]:\s?/i, "");
+              label.appendChild(document.createTextNode(cleanName));
+              modesContainer.appendChild(label);
+           }
+        });
+        
+        wizCompileForm();
+      }
+
+      function wizUpdateSearchCmd() {
+         const sn = document.getElementById("wizSearchSN").value.trim() || "{sn}";
+         const tpl = document.getElementById("wizSearchCmdHidden").innerText || "";
+         const ready = tpl.replace("{sn}", sn);
+         const btn = document.getElementById("wizBtnSearch");
+         if(!tpl) return;
+         btn.innerText = "Copiar Buscar: " + ready;
+      }
+
+      function copyWizSearchCmd() {
+         const sn = document.getElementById("wizSearchSN").value.trim() || "{sn}";
+         const tpl = document.getElementById("wizSearchCmdHidden").innerText || "";
+         if(tpl) {
+            navigator.clipboard.writeText(tpl.replace("{sn}", sn));
+            showCopied(document.getElementById("wizBtnSearch"));
+         }
+      }
+
+      function wizExtractData() {
+        const text = document.getElementById("wizPasteArea").value;
+        if(!text.trim()) return;
+        
+        const extracted = [];
+        const portRegex = /(?:gpon[-_]olt[-_]|gpon\s+)?(\d+)\/(\d+)(?:\/(\d+))?/i;
+        const portMatch = text.match(portRegex);
+        const snMatch = text.match(/(ZTEG[A-Z0-9]+|HWTC[A-Z0-9]+|ALCL[A-Z0-9]+|\w{12,16})/i);
+        // Regex super flexível para catar F670L, ZTE-F660, HT123, HG8145V5
+        const typeMatch = text.match(/\b(F\d{2,3}L?|ZTE-F\d{2,3}|HT\d{2,3}[A-Z-]*|HG\d{4}[A-Z\d]*|EG\d{4}[A-Z\d]*)\b/i);
+        
+        let foundPlaca = false;
+        
+        if(portMatch) {
+            let slot = portMatch[1];
+            let porta = portMatch[2];
+            let pon = portMatch[3];
+            
+            // Lógica Huawei vs ZTE based on OLT_NAME
+            if(window.CURRENT_OLT_NAME && window.CURRENT_OLT_NAME.toLowerCase().includes("huawei")) {
+                 if(document.getElementById("input-wiz-frame")) { document.getElementById("input-wiz-frame").value = slot; CURRENT_PARAMS['frame'] = slot; }
+                 if(document.getElementById("input-wiz-slot"))  { document.getElementById("input-wiz-slot").value = porta; CURRENT_PARAMS['slot'] = porta; }
+                 if(pon && document.getElementById("input-wiz-pon")) { document.getElementById("input-wiz-pon").value = pon; CURRENT_PARAMS['pon'] = pon; }
+            } else {
+                 if(document.getElementById("input-wiz-slot")) { document.getElementById("input-wiz-slot").value = slot; CURRENT_PARAMS['slot'] = slot; }
+                 if(document.getElementById("input-wiz-porta")) { document.getElementById("input-wiz-porta").value = porta; CURRENT_PARAMS['porta'] = porta; }
+                 if(pon && document.getElementById("input-wiz-pon")) { document.getElementById("input-wiz-pon").value = pon; CURRENT_PARAMS['pon'] = pon; }
+            }
+            if(pon) extracted.push(`Placa Fisgada: ${slot}/${porta}/${pon}`);
+            else extracted.push(`Slot/Porta: ${slot}/${porta}`);
+            foundPlaca = true;
+        }
+        
+        if(snMatch) {
+            if(document.getElementById("input-wiz-sn")) { document.getElementById("input-wiz-sn").value = snMatch[1]; CURRENT_PARAMS['sn'] = snMatch[1]; }
+            
+            // Sync up com o input search original caso o cabista cole a tela toda
+            const sInp = document.getElementById("wizSearchSN");
+            if(!sInp.value) { sInp.value = snMatch[1]; wizUpdateSearchCmd(); }
+            
+            extracted.push(`Serial: ${snMatch[1]}`);
+        }
+
+        // AUTO-SELECT do Dropdown de Hardware!
+        if (typeMatch) {
+            const detectedType = typeMatch[1].toUpperCase();
+            const typeSelect = document.getElementById("input-wiz-tipo");
+            
+            if (typeSelect) {
+                let foundOption = false;
+                for (let i = 0; i < typeSelect.options.length; i++) {
+                    const optVal = typeSelect.options[i].value.toUpperCase();
+                    // Se bate com exatidão ou contém a string (ex: "F660" no option "ZTE-F660")
+                    if (optVal.includes(detectedType) || detectedType.includes(optVal)) {
+                        typeSelect.selectedIndex = i;
+                        CURRENT_PARAMS['tipo'] = typeSelect.options[i].value;
+                        foundOption = true;
+                        break;
+                    }
+                }
+                if(foundOption) extracted.push(`Reconhecimento V2: ${detectedType}`);
+            }
+        }
+        
+        // Destrava Visualmente o Passo 2
+        document.getElementById("wizStep2").style.opacity = "1";
+        document.getElementById("wizStep2").style.pointerEvents = "auto";
+        
+        const resEl = document.getElementById("wizExtractionResult");
+        if(extracted.length > 0) {
+            resEl.innerText = "✔ AUTO-FILL SUCESSO: " + extracted.join(" | ") + ". Preencha o resto no Passo 2.";
+            resEl.style.color = "#27c93f";
+        } else {
+             resEl.innerText = "⚠ O texto não foi reconhecido. Não tem problema, digite manualmente abaixo.";
+             resEl.style.color = "#ffbd2e";
+        }
+      }
+
+      function wizCompileForm() {
+         const selectedRadio = document.querySelector('input[name="wizMode"]:checked');
+         if(!selectedRadio) return;
+         
+         const cmdName = selectedRadio.value;
+         let templateRaw = CURRENT_WIZ_DATA[cmdName];
+         
+         // Injetar Avisos Dinâmicos do Comando ou Categoria
+         let avisos = [];
+         Object.keys(CURRENT_WIZ_DATA).forEach(k => {
+             if(k.toLowerCase().includes("dica") || k.toLowerCase().includes("aviso")) {
+                 avisos.push(CURRENT_WIZ_DATA[k]);
+             }
+         });
+         
+         const tipsContainer = document.getElementById("wizTipsContainer");
+         if(avisos.length && tipsContainer) {
+             tipsContainer.innerHTML = avisos.map(a => 
+               `<div class="tip-item" style="margin-bottom:10px; font-size:12px; background: rgba(50, 145, 255, 0.15);">
+                 <svg style="flex-shrink:0; margin-top:2px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                 <span>${a}</span>
+               </div>`
+             ).join("");
+         } else if(tipsContainer) {
+             tipsContainer.innerHTML = "";
+         }
+         
+         // Anexar comando de Salvar se existir
+         let btnSaveCommand = undefined;
+         Object.keys(CURRENT_WIZ_DATA).forEach(k => {
+             if(k.toLowerCase().includes("salvar")) {
+                 btnSaveCommand = CURRENT_WIZ_DATA[k];
+             }
+         });
+         
+         CURRENT_WIZ_MODETemplate = Array.isArray(templateRaw) ? templateRaw.join("\n") : templateRaw;
+         if(btnSaveCommand) {
+             CURRENT_WIZ_MODETemplate += "\n" + (Array.isArray(btnSaveCommand) ? btnSaveCommand.join("\n") : btnSaveCommand);
+         }
+         
+         CURRENT_PARAMS = {};
+         renderParams(CURRENT_WIZ_MODETemplate, "wizFieldsContainer", "wiz");
+         wizExtractData(); // Tenta re-preencher baseado no texto já colado no passo 1
+      }
+
+      function wizShowFinal() {
+        let cmd = CURRENT_WIZ_MODETemplate;
+        Object.entries(CURRENT_PARAMS).forEach(([k, v]) => {
+          if (v) cmd = cmd.replace(new RegExp(`{${k}}`, "g"), v);
+        });
+        document.getElementById("wizCommandOutput").innerText = cmd;
+        document.getElementById("wizTerminalWindow").style.display = "block";
+        document.getElementById("wizTerminalWindow").scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      function copyWizFinal() {
+        const txt = document.getElementById("wizCommandOutput").innerText;
+        navigator.clipboard.writeText(txt);
+        showCopied(document.querySelector("#wizTerminalWindow .copy-btn"));
+      }
+
 
       // --- MOBILE MENU ---
       function toggleMenu() {
@@ -736,8 +1022,8 @@
       };
 
       // --- RENDERIZAÇÃO DE FORMULÁRIOS ---
-      function renderParams(template) {
-        const container = document.getElementById("paramsContainer");
+      function renderParams(template, targetContainerId, inputPrefix = "") {
+        const container = document.getElementById(targetContainerId || "paramsContainer");
         container.innerHTML = "";
 
         const regex = /{([\w]+)}/g;
@@ -763,22 +1049,49 @@
             ? `${param.toUpperCase()} - ${doc}`
             : param.toUpperCase();
 
-          // LÓGICA ESPECIAL PARA FIRMWARE
-          if (param === "firmware") {
+          const optionsData = window.OLT_OPTIONS && window.OLT_OPTIONS[window.CURRENT_OLT_NAME] && window.OLT_OPTIONS[window.CURRENT_OLT_NAME][param];
+
+          // LÓGICA ESPECIAL PARA FIRMWARE OU OPÇÕES CUSTOMIZADAS
+          if (param === "firmware" || optionsData) {
             const select = document.createElement("select");
-            select.className = "input modern-select"; // Reutiliza estilo de select moderno
+            select.className = "input modern-select";
 
-            // Popular opções
-            Object.entries(FIRMWARE_OPTIONS).forEach(([name, file]) => {
-              const opt = document.createElement("option");
-              opt.value = file;
-              opt.innerText = name;
-              select.appendChild(opt);
-            });
+            if (optionsData) {
+              // Placeholder "Selecione"
+              const placeholder = document.createElement("option");
+              placeholder.value = "";
+              placeholder.innerText = "-- Selecione --";
+              placeholder.disabled = true;
+              placeholder.selected = true;
+              select.appendChild(placeholder);
+              
+              // Popula a partir do seu window.OLT_OPTIONS
+              optionsData.forEach((optData) => {
+                const opt = document.createElement("option");
+                opt.value = optData.value;
+                opt.innerText = optData.label;
+                select.appendChild(opt);
+              });
+              CURRENT_PARAMS[param] = ""; // Fica vazio obrigando a seleção
+            } else {
+              // Placeholder
+              const placeholder = document.createElement("option");
+              placeholder.value = "";
+              placeholder.innerText = "-- Selecione --";
+              placeholder.disabled = true;
+              placeholder.selected = true;
+              select.appendChild(placeholder);
 
-            // Valor padrão
-            const defaultFile = Object.values(FIRMWARE_OPTIONS)[0];
-            CURRENT_PARAMS[param] = defaultFile;
+              // Popula o Firmware original como fallback
+              Object.entries(FIRMWARE_OPTIONS).forEach(([name, file]) => {
+                const opt = document.createElement("option");
+                opt.value = file;
+                opt.innerText = name;
+                select.appendChild(opt);
+              });
+              CURRENT_PARAMS[param] = ""; 
+            }
+
             // Força atualização inicial
             setTimeout(renderPreview, 0);
 
@@ -793,9 +1106,9 @@
             // INPUT PADRÃO PARA OUTROS PARÂMETROS
             const input = document.createElement("input");
             input.className = "input";
-            input.placeholder = param.toUpperCase(); // Placeholder limpo
+            input.placeholder = param.toUpperCase();
             input.autocomplete = "off";
-            input.id = `input-${param}`; // ID único para referência
+            input.id = `input-${inputPrefix}-${param}`; // PREFIXO NOVO PARA WIZARD OU PADRAO
 
             // AUTO-FILL INTELIGENTE (Ao colar no SLOT)
             if (param === "slot") {
@@ -803,27 +1116,21 @@
                 // Pequeno delay para pegar o valor colado
                 setTimeout(() => {
                   const val = e.target.value;
-                  // Regex para pegar sequências numéricas separadas por qualquer coisa não numérica
-                  // Ex: 1/2/3, 1-2-3, 1 2 3
                   const parts = val.split(/[/\-: ]+/).filter(p => p.trim() !== "");
                   
                   if (parts.length > 1) {
-                    // Mapeamento sequencial: Slot -> Porta -> Pon -> ID/ONU/Link
-                    const fields = ["slot", "porta", "pon", "id"]; // Ordem padrão
-                    
-                    // Fallbacks para nomes variáveis
                     const map = {
                         "slot": parts[0],
                         "porta": parts[1],
                         "pon": parts[2],
-                        "link": parts[1], // Fiberhome usa link as vezes
-                        "onu": parts[3],  // Fiberhome usa onu as vezes
+                        "frame": parts[0],
+                        "link": parts[1], 
+                        "onu": parts[3],  
                         "id": parts[3]
                     };
 
-                    // Tenta preencher os campos existentes na tela
                     Object.keys(map).forEach(key => {
-                        const targetInput = document.getElementById(`input-${key}`);
+                        const targetInput = document.getElementById(`input-${inputPrefix}-${key}`);
                         if(targetInput && map[key]) {
                             targetInput.value = map[key];
                             CURRENT_PARAMS[key] = map[key];
@@ -831,7 +1138,7 @@
                         }
                     });
                     
-                    renderPreview();
+                    if(!inputPrefix) renderPreview();
                   }
                 }, 10);
               };
@@ -840,7 +1147,7 @@
             input.oninput = (e) => {
               CURRENT_PARAMS[param] = e.target.value;
               validate(input, param, e.target.value);
-              renderPreview();
+              if(!inputPrefix) renderPreview();
             };
 
             group.appendChild(label);

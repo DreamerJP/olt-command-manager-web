@@ -4,13 +4,13 @@ window.OLT_DATA = {
         "categories": {
             "Gerenciamento de ONU": {
                 "Adicionar ONU": {
-                    "_dica": "Na ZTE Z600, o perfil (profile-id) deve existir previamente na OLT. Use 'show gpon onu by sn {sn}' antes para confirmar que a ONU está batendo na PON correta.",
-                    "🔍 Passo Inicial: Verificar ONU por SN": "show gpon onu by sn {sn}",
-                    "🔍 Passo Inicial: Verificar IDs na PON": "show gpon onu state gpon_olt-{slot}/{porta}/{pon}",
-                    "▶ OPÇÃO A: Adicionar ONU L2 (Modo Bridge)": "configure terminal\ninterface gpon_olt-{slot}/{porta}/{pon}\nonu {id} type {tipo} sn {sn}\nexit\ninterface gpon_onu-{slot}/{porta}/{pon}:{id}\nname {nome}\nsn-bind enable sn\ntcont 1 profile INTERNET\ngemport 1 name INTERNET tcont 1\nexit\ninterface vport-{slot}/{porta}/{pon}.{id}:1\nservice-port 1 user-vlan {vlan} vlan {vlan}\nexit\npon-onu-mng gpon_onu-{slot}/{porta}/{pon}:{id}\nvlan port eth_0/1 mode tag vlan {vlan}\nservice 1 gemport 1 vlan {vlan}\nexit\nexit",
-                    "▶ OPÇÃO B: Adicionar ONU L3 (Modo Router)": "configure terminal\ninterface gpon_olt-{slot}/{porta}/{pon}\nonu {id} type {tipo} sn {sn}\nexit\ninterface gpon_onu-{slot}/{porta}/{pon}:{id}\nname {nome}\nsn-bind enable sn\ntcont 1 profile INTERNET\ngemport 1 name INTERNET tcont 1\nexit\ninterface vport-{slot}/{porta}/{pon}.{id}:1\nservice-port 1 user-vlan {vlan} vlan {vlan}\nexit\npon-onu-mng gpon_onu-{slot}/{porta}/{pon}:{id}\nservice 1 gemport 1 vlan {vlan}\nwan-ip 1 ipv4 mode pppoe username {pppoe_login} password {pppoe_senha} vlan-profile INT-{vlan} host 1\nsecurity-mgmt 1 state enable ingress-type iphost 1 protocol web\nsecurity-mgmt 1 state enable mode forward ingress-type wan protocol web\nexit\nexit",
-                    "💾 Passo Final: Salvar (Obrigatório)": "write",
-                    "_aviso": "No Modo Router, o profile 'INT-{vlan}' deve existir na OLT. O campo {tipo} é o modelo da ONU."
+                    "Dica": "Na ZTE Z600, o perfil (profile-id) deve existir previamente na OLT. Use 'show gpon onu by sn {sn}' antes para confirmar que a ONU está batendo na PON correta.",
+                    "Passo Inicial: Verificar ONU por SN": "show gpon onu by sn {sn}",
+                    "Passo Inicial: Verificar IDs na PON": "show gpon onu state gpon_olt-{slot}/{porta}/{pon}",
+                    "OPÇÃO A: Adicionar ONU L2 (Modo Bridge)": "configure terminal\ninterface gpon_olt-{slot}/{porta}/{pon}\nonu {id} type {tipo} sn {sn}\nexit\ninterface gpon_onu-{slot}/{porta}/{pon}:{id}\nname {nome}\nsn-bind enable sn\ntcont 1 profile INTERNET\ngemport 1 name INTERNET tcont 1\nexit\ninterface vport-{slot}/{porta}/{pon}.{id}:1\nservice-port 1 user-vlan {vlan} vlan {vlan}\nexit\npon-onu-mng gpon_onu-{slot}/{porta}/{pon}:{id}\nvlan port eth_0/1 mode tag vlan {vlan}\nservice 1 gemport 1 vlan {vlan}\nexit\nexit",
+                    "OPÇÃO B: Adicionar ONU L3 (Modo Router)": "configure terminal\ninterface gpon_olt-{slot}/{porta}/{pon}\nonu {id} type {tipo} sn {sn}\nexit\ninterface gpon_onu-{slot}/{porta}/{pon}:{id}\nname {nome}\nsn-bind enable sn\ntcont 1 profile INTERNET\ngemport 1 name INTERNET tcont 1\nexit\ninterface vport-{slot}/{porta}/{pon}.{id}:1\nservice-port 1 user-vlan {vlan} vlan {vlan}\nexit\npon-onu-mng gpon_onu-{slot}/{porta}/{pon}:{id}\nservice 1 gemport 1 vlan {vlan}\nwan-ip 1 ipv4 mode pppoe username {pppoe_login} password {pppoe_senha} vlan-profile INT-{vlan} host 1\nsecurity-mgmt 1 state enable ingress-type iphost 1 protocol web\nsecurity-mgmt 1 state enable mode forward ingress-type wan protocol web\nexit\nexit",
+                    "Passo Final: Salvar (Obrigatório)": "write",
+                    "Aviso": "No Modo Router, o profile 'INT-{vlan}' deve existir na OLT. O campo {tipo} é o modelo da ONU."
                 },
                 "Consultar ONU": {
                     "Por Serial Number": "show gpon onu by sn {sn}",
@@ -64,14 +64,14 @@ window.OLT_DATA = {
         "categories": {
             "Gerenciamento de ONU": {
                 "Adicionar ONU": {
-                    "_dica": "Na ZTE C300, a interface usa gpon-olt_ (com hífen e underline), diferente da Z600 que usa gpon_olt- (underline e hífen). Atenção ao digitar.",
-                    "🔍 Passo Inicial: Verificar ONU na PON": "show gpon onu uncfg gpon-olt_{slot}/{porta}/{pon}",
-                    "🔍 Passo Inicial: Verificar IDs na PON": "show gpon onu state gpon-olt_{slot}/{porta}/{pon}",
-                    "▶ OPÇÃO A: Adicionar ONU L2 (Modo Bridge)": "configure terminal\ninterface gpon-olt_{slot}/{porta}/{pon}\nonu {id} type {tipo} sn {sn}\nexit\ninterface gpon-onu_{slot}/{porta}/{pon}:{id}\ntcont 1 profile INTERNET\ngemport 1 name INTERNET unicast tcont 1\nservice-port 1 vport 1 user-vlan {vlan} vlan {vlan}\nexit\npon-onu-mng gpon-onu_{slot}/{porta}/{pon}:{id}\nservice INTERNET gemport 1 cos 0 vlan {vlan}\nvlan port eth_0/1 mode tag vlan {vlan}\nexit\nexit",
-                    "▶ OPÇÃO B: Adicionar ONU L3 (Modo Router c/ PPPoE)": "configure terminal\ninterface gpon-olt_{slot}/{porta}/{pon}\nonu {id} type {tipo} sn {sn}\nexit\ninterface gpon-onu_{slot}/{porta}/{pon}:{id}\ntcont 1 profile INTERNET\ngemport 1 name INTERNET unicast tcont 1\nservice-port 1 vport 1 user-vlan {vlan} vlan {vlan}\nexit\npon-onu-mng gpon-onu_{slot}/{porta}/{pon}:{id}\nservice INTERNET gemport 1 cos 0 vlan {vlan}\nwan-ip 1 ipv4 mode pppoe username {pppoe_login} password {pppoe_senha} vlan-profile INT-{vlan} host 1\nsecurity-mgmt 1 state enable ingress-type iphost 1 protocol web\nsecurity-mgmt 1 state enable mode forward ingress-type wan protocol web\nexit\nexit",
-                    "▶ OPÇÃO C: Adicionar ONU L3 (Telefonia / Sem auto-PPPoE)": "configure terminal\ninterface gpon-olt_{slot}/{porta}/{pon}\nonu {id} type {tipo} sn {sn}\nexit\ninterface gpon-onu_{slot}/{porta}/{pon}:{id}\ntcont 1 profile INTERNET\ngemport 1 name INTERNET unicast tcont 1\nservice-port 1 vport 1 user-vlan {vlan} vlan {vlan}\nexit\npon-onu-mng gpon-onu_{slot}/{porta}/{pon}:{id}\nservice 1 gemport 1 vlan {vlan}\nexit\nexit",
-                    "💾 Passo Final: Salvar (Obrigatório)": "write",
-                    "_aviso": "O {id} deve ser um número livre na PON. Modo PPPoE configurará a WAN internamente via OMCI."
+                    "Dica": "Na ZTE C300, a interface usa gpon-olt_ (com hífen e underline), diferente da Z600 que usa gpon_olt- (underline e hífen). Atenção ao digitar.",
+                    "Passo Inicial: Verificar ONU na PON": "show gpon onu uncfg gpon-olt_{slot}/{porta}/{pon}",
+                    "Passo Inicial: Verificar IDs na PON": "show gpon onu state gpon-olt_{slot}/{porta}/{pon}",
+                    "OPÇÃO A: Adicionar ONU L2 (Modo Bridge)": "configure terminal\ninterface gpon-olt_{slot}/{porta}/{pon}\nonu {id} type {tipo} sn {sn}\nexit\ninterface gpon-onu_{slot}/{porta}/{pon}:{id}\ntcont 1 profile INTERNET\ngemport 1 name INTERNET unicast tcont 1\nservice-port 1 vport 1 user-vlan {vlan} vlan {vlan}\nexit\npon-onu-mng gpon-onu_{slot}/{porta}/{pon}:{id}\nservice INTERNET gemport 1 cos 0 vlan {vlan}\nvlan port eth_0/1 mode tag vlan {vlan}\nexit\nexit",
+                    "OPÇÃO B: Adicionar ONU L3 (Modo Router c/ PPPoE)": "configure terminal\ninterface gpon-olt_{slot}/{porta}/{pon}\nonu {id} type {tipo} sn {sn}\nexit\ninterface gpon-onu_{slot}/{porta}/{pon}:{id}\ntcont 1 profile INTERNET\ngemport 1 name INTERNET unicast tcont 1\nservice-port 1 vport 1 user-vlan {vlan} vlan {vlan}\nexit\npon-onu-mng gpon-onu_{slot}/{porta}/{pon}:{id}\nservice INTERNET gemport 1 cos 0 vlan {vlan}\nwan-ip 1 ipv4 mode pppoe username {pppoe_login} password {pppoe_senha} vlan-profile INT-{vlan} host 1\nsecurity-mgmt 1 state enable ingress-type iphost 1 protocol web\nsecurity-mgmt 1 state enable mode forward ingress-type wan protocol web\nexit\nexit",
+                    "OPÇÃO C: Adicionar ONU L3 (Telefonia / Sem auto-PPPoE)": "configure terminal\ninterface gpon-olt_{slot}/{porta}/{pon}\nonu {id} type {tipo} sn {sn}\nexit\ninterface gpon-onu_{slot}/{porta}/{pon}:{id}\ntcont 1 profile INTERNET\ngemport 1 name INTERNET unicast tcont 1\nservice-port 1 vport 1 user-vlan {vlan} vlan {vlan}\nexit\npon-onu-mng gpon-onu_{slot}/{porta}/{pon}:{id}\nservice 1 gemport 1 vlan {vlan}\nexit\nexit",
+                    "Passo Final: Salvar (Obrigatório)": "write",
+                    "Aviso": "O {id} deve ser um número livre na PON. Modo PPPoE configurará a WAN internamente via OMCI."
                 },
                 "Consultar ONU": {
                     "Por Serial Number": "show gpon onu by sn {sn}",
@@ -108,17 +108,17 @@ window.OLT_DATA = {
             "Gerenciamento de ONU": {
                 "Adicionar ONU": {
                     "_dica": "Na Huawei MA5800, o comando 'interface gpon' usa apenas frame/slot (ex: 0/2). A porta PON entra separada nos comandos seguintes. Os perfis lineprofile e srvprofile normalmente seguem o número da VLAN nessa OLT (ex: VLAN 613 = perfil 613). Confirme os perfis disponíveis antes.",
-                    "🔍 Passo Inicial: Verificar perfis": "display ont-lineprofile gpon all",
-                    "🔍 Passo Inicial: Verificar ONU nova": "display ont autofind all",
-                    "🔍 Passo Inicial: Verificar IDs na PON": "display ont info summary {frame}/{slot}/{pon}",
-                    "▶ OPÇÃO A: Adicionar ONU L2 (Huawei Nativa)": "enable\nconfig\ninterface gpon {frame}/{slot}\nont add {pon} {id} sn-auth {sn} omci ont-lineprofile-id {perfil} ont-srvprofile-id {perfil} desc {nome}\nont port native-vlan {pon} {id} eth 1 vlan {vlan} priority 0\nquit\nservice-port vlan {vlan} gpon {frame}/{slot}/{pon} ont {id} gemport 1 multi-service user-vlan {vlan} tag-transform translate\nsave",
-                    "▶ OPÇÃO B: Adicionar ONT (Internet + Tel. VoIP)": "enable\nconfig\ninterface gpon {frame}/{slot}\nont add {pon} {id} sn-auth {sn} omci ont-lineprofile-id {perfil} ont-srvprofile-id {perfil} desc \"{nome}\"\nquit\nservice-port vlan {vlan} gpon {frame}/{slot}/{pon} ont {id} gemport 1 multi-service user-vlan {vlan} tag-transform translate\nservice-port vlan 4030 gpon {frame}/{slot}/{pon} ont {id} gemport 5 multi-service user-vlan 4030 tag-transform translate\nsave",
-                    "▶ OPÇÃO C: Adicionar ONU L2 (Perfil FAST 10)": "enable\nconfig\ninterface gpon {frame}/{slot}\nont add {pon} {id} sn-auth {sn} omci ont-lineprofile-id 10 ont-srvprofile-id 10 desc \"{nome}\"\nquit\nservice-port vlan {vlan} gpon {frame}/{slot}/{pon} ont {id} gemport 1 multi-service user-vlan untagged tag-transform default\nsave",
-                    "▶ OPÇÃO D: Adicionar ONU L2 (Terceiros / Zyxel)": "enable\nconfig\ninterface gpon {frame}/{slot}\nont add {pon} {id} sn-auth {sn} omci ont-lineprofile-id {perfil} ont-srvprofile-id {perfil} desc {nome}\nquit\nservice-port vlan {vlan} gpon {frame}/{slot}/{pon} ont {id} gemport 1 multi-service user-vlan {vlan} tag-transform translate\nsave",
-                    "_aviso_perfil": "Se der erro 'The line profile does not exist', o perfil 48 não existe nessa OLT. Use o passo 1 para listar os perfis reais e substitua pelo número correto.",
-                    "_aviso_id": "O {id} deve ser o próximo número livre na PON. Use o passo 3 para verificar. Se o IXC tentar usar o ID 0 e ele já estiver ocupado, a autorização vai falhar.",
-                    "_aviso_ixc": "Após subir manualmente, atualize o campo 'ONU número' no IXC com o {id} usado antes de clicar em Autorizar ONU novamente.",
-                    "5. Verificar se subiu": "display ont info by-sn {sn}"
+                    "Passo Inicial: Verificar perfis": "display ont-lineprofile gpon all",
+                    "Passo Inicial: Verificar ONU nova": "display ont autofind all",
+                    "Passo Inicial: Verificar IDs na PON": "display ont info summary {frame}/{slot}/{pon}",
+                    "OPÇÃO A: Adicionar ONU L2 (Huawei Nativa)": "enable\nconfig\ninterface gpon {frame}/{slot}\nont add {pon} {id} sn-auth {sn} omci ont-lineprofile-id {perfil} ont-srvprofile-id {perfil} desc {nome}\nont port native-vlan {pon} {id} eth 1 vlan {vlan} priority 0\nquit\nservice-port vlan {vlan} gpon {frame}/{slot}/{pon} ont {id} gemport 1 multi-service user-vlan {vlan} tag-transform translate\nsave",
+                    "OPÇÃO B: Adicionar ONT (Internet + Tel. VoIP)": "enable\nconfig\ninterface gpon {frame}/{slot}\nont add {pon} {id} sn-auth {sn} omci ont-lineprofile-id {perfil} ont-srvprofile-id {perfil} desc \"{nome}\"\nquit\nservice-port vlan {vlan} gpon {frame}/{slot}/{pon} ont {id} gemport 1 multi-service user-vlan {vlan} tag-transform translate\nservice-port vlan 4030 gpon {frame}/{slot}/{pon} ont {id} gemport 5 multi-service user-vlan 4030 tag-transform translate\nsave",
+                    "OPÇÃO C: Adicionar ONU L2 (Perfil FAST 10)": "enable\nconfig\ninterface gpon {frame}/{slot}\nont add {pon} {id} sn-auth {sn} omci ont-lineprofile-id 10 ont-srvprofile-id 10 desc \"{nome}\"\nquit\nservice-port vlan {vlan} gpon {frame}/{slot}/{pon} ont {id} gemport 1 multi-service user-vlan untagged tag-transform default\nsave",
+                    "OPÇÃO D: Adicionar ONU L2 (Terceiros / Zyxel)": "enable\nconfig\ninterface gpon {frame}/{slot}\nont add {pon} {id} sn-auth {sn} omci ont-lineprofile-id {perfil} ont-srvprofile-id {perfil} desc {nome}\nquit\nservice-port vlan {vlan} gpon {frame}/{slot}/{pon} ont {id} gemport 1 multi-service user-vlan {vlan} tag-transform translate\nsave",
+                    "aviso_perfil": "Se der erro 'The line profile does not exist', o perfil 48 não existe nessa OLT. Use o passo 1 para listar os perfis reais e substitua pelo número correto.",
+                    "aviso_id": "O {id} deve ser o próximo número livre na PON. Use o passo 3 para verificar. Se o IXC tentar usar o ID 0 e ele já estiver ocupado, a autorização vai falhar.",
+                    "aviso_ixc": "Após subir manualmente, atualize o campo 'ONU número' no IXC com o {id} usado antes de clicar em Autorizar ONU novamente.",
+                    "Verificar se subiu": "display ont info by-sn {sn}"
                 },
                 "Consultar ONU": {
                     "Resumo PON": "display ont info summary",
